@@ -24,7 +24,7 @@ export const AppContextProvider = ({children})=>{
     const fetchBooks = async() => {
         // setProducts(dummyProducts);
         const response = await axios.get('/api/books');
-        console.log(response.data);
+        // console.log(response.data);
         setProducts(response.data);
     }
 

@@ -1,15 +1,18 @@
 // BookDetails.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 // import axios from "axios";
 import { useParams } from "react-router-dom";
 import { assets } from "../../../assets/assets";
 import { useAppContext } from "../../../context/AppContext";
+import ChatContext from "../../../context/ChatContext";
 
 export default function BookDetails() {
   const { id } = useParams(); // fetch bookId from route (e.g. /books/book/123)
   const [book, setBook] = useState(null);
-  const { axios, navigate } = useAppContext();
+  const { axios, navigate, user } = useAppContext();
   const [loading, setLoading] = useState(true);
+
+  const { getMessages, setChatId, setMess, socket, selectedUser, chatId } = useContext(ChatContext);
 
   // const defaultAvatar = "/assets/image/default-profile.png";
 
@@ -36,7 +39,6 @@ export default function BookDetails() {
     const fetchBook = async () => {
       try {
         const res = await axios.get(`/api/books/book/${id}`);
-        // console.log(res.data);
         setBook(res.data);
       } catch (err) {
         console.error("Error fetching book:", err);
@@ -50,6 +52,44 @@ export default function BookDetails() {
 
   if (loading) return <p>Loading book details...</p>;
   if (!book) return <p>Book not found.</p>;
+
+  const handleContactSeller = async () => {
+    try {
+      console.log("Initiating chat with:", {
+        buyerId: user._id,
+        sellerId: book.seller._id,
+        bookId: book._id
+      });
+  
+      const res = await axios.post("/api/messages/initiate", {
+        buyerId: user._id,
+        sellerId: book.seller._id,
+        bookId: book._id
+      });
+  
+      console.log("Chat initiated response:", res.data);
+      setChatId(res.data.chatId);
+  
+      // 2. Join chat room
+      socket.emit("join-chat", { chatId: res.data.chatId });
+  
+      // 3. Default message भेजो (अगर नया chat है)
+      if (res.data.isNew) {
+        const defaultMsg = {
+          chatId: res.data.chatId,
+          senderId: user._id,
+          receiverId: book.seller._id,
+          text: "Hi, is this book still available?"
+        };
+        socket.emit("send-message", defaultMsg);
+      }
+  
+      console.log("Navigating to:", `/user/dashboard/all-chats/chat/${res.data.chatId}`);
+      navigate(`/user/dashboard/all-chats/chat/${res.data.chatId}`);
+    } catch (error) {
+      console.error("Error contacting seller:", error);
+    }
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen px-4 py-10 mt-20">
@@ -111,12 +151,13 @@ export default function BookDetails() {
               <div>
                 <p className="font-semibold">{book.seller.name}</p>
                 <button
-                  onClick={() => {
-                    // console.log(book.seller._id)
-                    navigate(
-                      `/user/dashboard/all-chats/chat/${book.seller._id}`
-                    );
-                  }}
+                  // onClick={() => {
+                  //   // console.log(book.seller._id)
+                  //   navigate(
+                  //     `/user/dashboard/all-chats/chat/${book.seller._id}`
+                  //   );
+                  // }}
+                  onClick={handleContactSeller}
                   className="mt-1 text-sm px-3 py-1 border rounded-md hover:bg-black hover:text-white transition"
                 >
                   Contact Seller

@@ -2,45 +2,32 @@ import { useContext } from "react";
 import { createContext } from "react";
 import { AppContext } from "./AppContext";
 import { useState } from "react";
-
+import { useSocket } from "./SocketContext";
 
 const ChatContext = createContext();
 
 export const ChatProvider = ({children}) => {
 
-    const {axios} = useContext(AppContext);
+    const {axios, user} = useContext(AppContext);
+    const socket = useSocket().current;
 
     const [selectedUser, setSelectedUser] = useState(null);
     const [mess, setMess] = useState([]);
+    const [chatId, setChatId] = useState(null);
 
-    // function to get messages for selected user
-    const getMessages = async (userId) => {
-        try {
-            const { data } = await axios.get(`/api/messages/${userId}`);
-            if (data.success) {
-                console.log(data);
-                // setMessages(data.messages)
-            }
-        } catch (error) {
-            console.log(error.message);
-        }
-    }
+     // Get messages for chatId
+     const getMessages = async (chatId) => {
+        // console.log("user Chat Id: ",chatId);
+        const { data } = await axios.get(`/api/messages/${chatId}`);
+        if (data.success) setMess(data.messages);
+        return data.messages;
+    };
 
-    // function to send message to selected user
-    const sendMessage = async (messageData) => {
-        try {
-            const { data } = await axios.post(`/api/messages/send/${selectedUser._id}`, messageData);
-            if (data.success) {
-                console.log(data)
-                // setMessages((prevMessages) => [...prevMessages, data.newMessage])
-            }
-            else{
-                console.log(data.message)
-            }
-        } catch (error) {
-            console.log(error.message)
-        }
-    }
+     // Send message
+     const sendMessage = async (msg) => {
+        await axios.post(`/api/messages/send/${chatId}`, msg);
+        // Real-time handled by socket
+    };
 
     const value = {
         getMessages,
@@ -48,7 +35,11 @@ export const ChatProvider = ({children}) => {
         selectedUser,
         setSelectedUser,
         mess,
-        setMess
+        setMess,
+        socket,
+        user,
+        chatId,
+        setChatId
     }
 
     return (

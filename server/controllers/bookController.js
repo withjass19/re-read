@@ -55,7 +55,7 @@ exports.createBook = async (req, res) => {
 
 exports.getAllBooks = async (req, res) => {
   try {
-    const books = await Book.find().sort({ createdAt: -1 });
+    const books = await Book.find().sort({ createdAt: -1 }).populate("seller", "name email profileImage"); 
     res.status(200).json(books);
   } catch (err) {
     res.status(500).json({ msg: "Failed to fetch books", error: err.message });

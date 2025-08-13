@@ -6,8 +6,10 @@ const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const cookieParser = require("cookie-parser");
 const bookRoutes = require("./routes/bookRoutes");
-const messageRoutes = require("./routes/messageRoutes");
+// const messageRoutes = require("./routes/messageRoutes");
+const messageRoutes = require('./routes/messageRoutes');
 const { Server } = require("socket.io");
+const Message = require('./models/Message')
 
 const app = express();
 const server = http.createServer(app);
@@ -18,27 +20,33 @@ const allowedOrigins = ['http://localhost:5173'];
 
 // initialize socket.io server
 const io = new Server(server, {
-  cors: { origin: allowedOrigins }
+  cors: { 
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
+  }
 })
 
 // store online users
 const userSocketMap = {}
 
 // Socket.io connection handler
-io.on("connection", (socket) => {
-  const userId = socket.handshake.query.userId;
-  console.log("User Connected", userId) = socket.id;
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
 
-  if (userId) userSocketMap[userId] = socket.id;
-
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
-
-  socket.on("disconnected", () => {
-    console.log("User Disconnected", userId);
-    delete userSocketMap[userId];
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  socket.on('join-chat', ({ chatId }) => {
+    socket.join(chatId);
   });
-})
+
+  socket.on('send-message', async (message) => {
+    const saved = await Message.create(message);
+    io.to(message.chatId).emit('receive-message', saved);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
 
 // app.use(cors());
 app.use(cors({origin: allowedOrigins, credentials: true}));
@@ -54,7 +62,9 @@ app.get("/", (req, res) => {
 app.use('/api/user', userRoutes);
 app.use('/api/books', bookRoutes);
 // app.use("/api/messages", messageRouter);
-app.use("/api/messages", messageRoutes);
+// app.use("/api/messages", messageRoutes);
+// ...existing code...
+app.use('/api/messages', messageRoutes);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,16 +1,19 @@
-import React from "react";
+// import React from "react";
 // import axios from "axios";
 // import BookCard from "../../components/BookCard/BookCard";
 // import FilterSidebar from "../../components/FilterSidebar/FilterSidebar";
 import ProductCard from "../../../components/ProductCard";
 import FilterSidebar from "../../../components/FilterSidebar";
 import { useAppContext } from "../../../context/AppContext";
+import React, { useContext } from "react";
+import ChatContext from "../../../context/ChatContext";
 // import BookCard from "../components/BookCard";
 
 // import FilterSidebar from "../components/FilterSidebar";
 
 export default function AllBooks() {
   const { products } = useAppContext();
+  console.log(products);
   //   const [books, setBooks] = useState([]);
 
   //   useEffect(() => {
@@ -68,6 +71,7 @@ export default function AllBooks() {
   //       imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c",
   //     },
   //   ];
+  const { setSelectedUser } = useContext(ChatContext);
 
   return (
     <div className="min-h-screen px-4 py-6 bg-gray-50">
@@ -89,7 +93,7 @@ export default function AllBooks() {
           {/* Book Cards */}
           <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {products.map((products, i) => (
-              <ProductCard key={i} {...products} />
+              <ProductCard onClick={setSelectedUser(products.seller)} key={i} {...products} />
             ))}
           </div>
         </div>

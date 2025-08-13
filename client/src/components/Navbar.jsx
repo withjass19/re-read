@@ -18,6 +18,8 @@ const Navbar = () => {
   const location = useLocation();
   const path = location.pathname;
 
+  // const { navigate } = useAppContext()
+
   // const matchedRoutes = [
   //   "/books", 
   //   "/books/all-books", 
@@ -48,7 +50,7 @@ const Navbar = () => {
         toast.success(data.message)
         setUser(null);
         setShowUserLogin(null);
-        navigation("/");
+        navigate("/");
       }
 
     } catch (error) {
@@ -182,7 +184,7 @@ const Navbar = () => {
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-200 z-50">
                 <div className="px-4 py-3 border-b font-semibold">
                   {/* {username} */}
-                  Jass
+                  {user.name}
                 </div>
                 <ul className="text-sm text-gray-700">
                   <li
